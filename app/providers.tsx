@@ -4,7 +4,12 @@ import { SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
 import "@mysten/dapp-kit/dist/index.css";
 
 const queryClient = new QueryClient();
-const networks = { testnet: { url: "https://fullnode.testnet.sui.io:443" } };
+const networks = {
+  testnet: {
+    url: "https://fullnode.testnet.sui.io:443",
+    network: "testnet" as const,
+  }
+};
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
