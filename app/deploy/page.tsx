@@ -94,7 +94,7 @@ export default function DeployPage() {
       ],
     })
 
-    signAndExecute({ transaction: setupTx, options: { showObjectChanges: true } }, {
+    signAndExecute({ transaction: setupTx }, {
       onSuccess: (setupResult) => {
         setDeployStatus('depositing')
         const vaultChange = (setupResult as any).objectChanges?.find(
