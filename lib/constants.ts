@@ -29,7 +29,7 @@ export const TIER_COLORS: Record<number, string> = {
   3: 'text-violet border-violet/20 bg-violet/10',
 }
 
-export const MIST_PER_SUI = 1_000_000_000n
+export const MIST_PER_SUI = BigInt(1_000_000_000)
 export const toSUI  = (mist: bigint | string | number) => Number(BigInt(mist.toString())) / 1e9
 export const toMIST = (sui: number) => BigInt(Math.floor(sui * 1e9))
 export const fmtSUI = (mist: bigint | string | number, decimals = 3) =>
