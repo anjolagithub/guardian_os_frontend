@@ -111,7 +111,7 @@ export default function Home() {
               GuardianOS is the <span className="text-cyan">trust enforcement layer</span> that sits between the agent and the blockchain.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Link href="/dashboard" className="group flex items-center gap-2 px-5 py-3 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
+              <Link href="/deploy" className="group flex items-center gap-2 px-5 py-3 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
                 Open Dashboard <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               <a href="https://suiscan.xyz/testnet" target="_blank" rel="noreferrer"
@@ -202,7 +202,7 @@ export default function Home() {
             <p className="font-sans text-ghost mb-7 max-w-xl mx-auto text-sm sm:text-base">
               Deploy your first GuardianOS vault in one transaction. No trust required.
             </p>
-            <Link href="/dashboard" className="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
+            <Link href="/deploy" className="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
               <Shield size={16} /> Launch GuardianOS
             </Link>
           </div>
