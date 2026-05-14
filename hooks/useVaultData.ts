@@ -93,9 +93,9 @@ export function useVaultData() {
       const spendMapped: ActionEvent[] = spendEvents.data.map(e => ({
         id:          e.id.txDigest + e.id.eventSeq,
         timestampMs: Number(e.timestampMs ?? 0),
-        protocol:    PROTOCOLS[e.parsedJson?.protocol as number] ?? 'Unknown',
-        action:      ACTIONS[e.parsedJson?.action_type as number] ?? 'Unknown',
-        amountSUI:   toSUI(e.parsedJson?.amount_mist ?? 0),
+        protocol:    PROTOCOLS[(e.parsedJson as any)?.protocol] ?? 'Unknown',
+        action:      ACTIONS[(e.parsedJson as any)?.action_type] ?? 'Unknown',
+        amountSUI:   toSUI((e.parsedJson as any)?.amount_mist ?? 0),
         status:      'success',
         txDigest:    e.id.txDigest,
       }))
@@ -103,9 +103,9 @@ export function useVaultData() {
       const blockedMapped: ActionEvent[] = blockedEvents.data.map(e => ({
         id:          e.id.txDigest + e.id.eventSeq,
         timestampMs: Number(e.timestampMs ?? 0),
-        protocol:    PROTOCOLS[e.parsedJson?.protocol as number] ?? 'Unknown',
-        action:      ACTIONS[e.parsedJson?.attempted_action as number] ?? 'Unknown',
-        amountSUI:   toSUI(e.parsedJson?.attempted_amount_mist ?? 0),
+        protocol:    PROTOCOLS[(e.parsedJson as any)?.protocol] ?? 'Unknown',
+        action:      ACTIONS[(e.parsedJson as any)?.attempted_action] ?? 'Unknown',
+        amountSUI:   toSUI((e.parsedJson as any)?.attempted_amount_mist ?? 0),
         status:      'blocked',
         txDigest:    e.id.txDigest,
       }))
