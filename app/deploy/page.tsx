@@ -9,7 +9,7 @@ import { toMIST } from '@/lib/constants'
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID
 if (!PACKAGE_ID) {
-  return <div>Missing NEXT_PUBLIC_PACKAGE_ID in environment</div>
+  throw new Error('Missing NEXT_PUBLIC_PACKAGE_ID in environment')
 }
 
 const TEMPLATES = [
