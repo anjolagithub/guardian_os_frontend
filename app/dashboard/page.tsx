@@ -95,13 +95,13 @@ function WalletButton() {
 }
 
 export default function Dashboard() {
+  const account = useCurrentAccount()
   const { vault, events, loading, refresh } = useVaultData(account?.address)
   const [showModal, setShowModal]     = useState(false)
   const [stopLoading, setStopLoading] = useState(false)
   const [stopSuccess, setStopSuccess] = useState(false)
   const [menuOpen, setMenuOpen]       = useState(false)
-
-  const account = useCurrentAccount()
+  
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
 
   const passed  = events.filter(e => e.status === 'success').length
