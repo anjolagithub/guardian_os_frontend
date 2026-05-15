@@ -7,7 +7,10 @@ import Link from 'next/link'
 import { Shield, ChevronRight, ChevronLeft, Wallet, Check } from 'lucide-react'
 import { toMIST } from '@/lib/constants'
 
-const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID ?? ''
+const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID
+if (!PACKAGE_ID) {
+  return <div>Missing NEXT_PUBLIC_PACKAGE_ID in environment</div>
+}
 
 const TEMPLATES = [
   {
