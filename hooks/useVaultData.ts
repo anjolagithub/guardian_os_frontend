@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { toSUI, TIERS, PROTOCOLS, ACTIONS } from '@/lib/constants'
 
 export interface VaultData {
+  vaultId: string
+  identityId: string
   balanceSUI: number
   dailySpentSUI: number
   dailyCapSUI: number
@@ -25,15 +27,12 @@ export interface ActionEvent {
   amountSUI: number
   status: 'success' | 'blocked'
   txDigest: string
-  walrusBlobId?: string
 }
 
-export function useVaultData() {
+export function useVaultData(walletAddress?: string) {
   const client = useSuiClient()
 
-  const PACKAGE_ID  = process.env.NEXT_PUBLIC_PACKAGE_ID  ?? ''
-  const VAULT_ID    = process.env.NEXT_PUBLIC_VAULT_ID    ?? ''
-  const IDENTITY_ID = process.env.NEXT_PUBLIC_IDENTITY_ID ?? ''
+  const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID ?? ''
 
   const [vault,   setVault]   = useState<VaultData | null>(null)
   const [events,  setEvents]  = useState<ActionEvent[]>([])
@@ -41,17 +40,47 @@ export function useVaultData() {
   const [error,   setError]   = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!VAULT_ID || !IDENTITY_ID || !PACKAGE_ID) {
-      setError('Missing environment variables')
-      setLoading(false)
-      return
-    }
+    if (!PACKAGE_ID) { setError('Missing PACKAGE_ID'); setLoading(false); return }
 
     try {
-      // ── Vault object ──────────────────────────────────────────────────────────
+      // ── Step 1: Find vault owned by this wallet ───────────────────────────
+      // In production: query by wallet address
+      // Fallback: use env var for demo/hackathon
+      let vaultId   = process.env.NEXT_PUBLIC_VAULT_ID ?? ''
+      let identityId = process.env.NEXT_PUBLIC_IDENTITY_ID ?? ''
+
+      if (walletAddress) {
+        // Production path — find vault from wallet
+        const ownedVaults = await client.getOwnedObjects({
+          owner: walletAddress,
+          filter: { StructType: `${PACKAGE_ID}::execution_vault::ExecutionVault` },
+          options: { showContent: true },
+        })
+
+        const ownedIdentities = await client.getOwnedObjects({
+          owner: walletAddress,
+          filter: { StructType: `${PACKAGE_ID}::guardian_identity::AgentIdentity` },
+          options: { showContent: true },
+        })
+
+        if (ownedVaults.data.length > 0) {
+          vaultId = ownedVaults.data[0].data?.objectId ?? vaultId
+        }
+        if (ownedIdentities.data.length > 0) {
+          identityId = ownedIdentities.data[0].data?.objectId ?? identityId
+        }
+      }
+
+      if (!vaultId || !identityId) {
+        setError('No vault found for this wallet')
+        setLoading(false)
+        return
+      }
+
+      // ── Step 2: Fetch vault + identity objects ─────────────────────────────
       const [vaultObj, identityObj] = await Promise.all([
-        client.getObject({ id: VAULT_ID,    options: { showContent: true } }),
-        client.getObject({ id: IDENTITY_ID, options: { showContent: true } }),
+        client.getObject({ id: vaultId,    options: { showContent: true } }),
+        client.getObject({ id: identityId, options: { showContent: true } }),
       ])
 
       const vf = (vaultObj.data?.content as any)?.fields
@@ -62,6 +91,8 @@ export function useVaultData() {
         const tierIdx = Number(id.tier ?? 1)
 
         setVault({
+          vaultId,
+          identityId,
           balanceSUI:           toSUI(vf.balance ?? 0),
           dailySpentSUI:        toSUI(vf.daily_spent_mist ?? 0),
           dailyCapSUI:          toSUI(policyFields.daily_cap_mist ?? 50_000_000_000),
@@ -76,17 +107,15 @@ export function useVaultData() {
         })
       }
 
-      // ── Events ────────────────────────────────────────────────────────────────
+      // ── Step 3: Fetch events for this vault ────────────────────────────────
       const [spendEvents, blockedEvents] = await Promise.all([
         client.queryEvents({
           query: { MoveEventType: `${PACKAGE_ID}::execution_vault::SpendExecuted` },
-          limit: 20,
-          order: 'descending',
+          limit: 20, order: 'descending',
         }),
         client.queryEvents({
           query: { MoveEventType: `${PACKAGE_ID}::execution_vault::PolicyViolationBlocked` },
-          limit: 10,
-          order: 'descending',
+          limit: 10, order: 'descending',
         }),
       ])
 
@@ -110,23 +139,22 @@ export function useVaultData() {
         txDigest:    e.id.txDigest,
       }))
 
-      const all = [...spendMapped, ...blockedMapped]
+      setEvents([...spendMapped, ...blockedMapped]
         .sort((a, b) => b.timestampMs - a.timestampMs)
-        .slice(0, 20)
+        .slice(0, 20))
 
-      setEvents(all)
       setError(null)
     } catch (err: any) {
-      console.error('useVaultData error:', err)
-      setError(err.message ?? 'Failed to fetch data')
+      console.error('useVaultData:', err)
+      setError(err.message ?? 'Failed to fetch')
     } finally {
       setLoading(false)
     }
-  }, [client, VAULT_ID, IDENTITY_ID, PACKAGE_ID])
+  }, [client, walletAddress, PACKAGE_ID])
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 10_000) // refresh every 10s
+    const interval = setInterval(fetchData, 10_000)
     return () => clearInterval(interval)
   }, [fetchData])
 

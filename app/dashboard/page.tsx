@@ -95,7 +95,7 @@ function WalletButton() {
 }
 
 export default function Dashboard() {
-  const { vault, events, loading, refresh } = useVaultData()
+  const { vault, events, loading, refresh } = useVaultData(account?.address)
   const [showModal, setShowModal]     = useState(false)
   const [stopLoading, setStopLoading] = useState(false)
   const [stopSuccess, setStopSuccess] = useState(false)
