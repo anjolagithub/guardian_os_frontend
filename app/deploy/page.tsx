@@ -94,32 +94,56 @@ export default function DeployPage() {
       ],
     })
 
-    signAndExecute({ transaction: setupTx }, {
-      onSuccess: (setupResult) => {
-        setDeployStatus('depositing')
-        const vaultChange = (setupResult as any).objectChanges?.find(
-          (c: any) => c.type === 'created' && c.objectType?.includes('ExecutionVault')
-        ) as any
+    signAndExecute({ transaction: setupTx, chain: 'sui:testnet' }, {
+     onSuccess: async (setupResult) => {
+  setDeployStatus('depositing')
+  
+  // Fetch the full tx to get object changes
+  const txDetails = await fetch(
+    `https://fullnode.testnet.sui.io:443`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'sui_getTransactionBlock',
+        params: [
+          setupResult.digest,
+          { showObjectChanges: true, showEffects: true }
+        ]
+      })
+    }
+  ).then(r => r.json())
 
-        if (!vaultChange?.objectId) {
-          console.error('Could not find vault ID in tx result')
-          router.push('/dashboard')
-          return
-        }
+  const changes = txDetails?.result?.objectChanges ?? []
+  const vaultChange = changes.find(
+    (c: any) => c.type === 'created' && c.objectType?.includes('ExecutionVault')
+  )
 
-        const newVaultId = vaultChange.objectId
-        const depositTx = new Transaction()
-        const [coin] = depositTx.splitCoins(depositTx.gas, [depositTx.pure.u64(toMIST(deposit))])
-        depositTx.moveCall({
-          target: `${PACKAGE_ID}::execution_vault::deposit`,
-          arguments: [depositTx.object(newVaultId), coin],
-        })
+  if (!vaultChange?.objectId) {
+    console.error('Object changes:', changes)
+    // Still redirect — vault was created, user can use existing dashboard
+    router.push('/dashboard')
+    return
+  }
 
-        signAndExecute({ transaction: depositTx }, {
-          onSuccess: () => { setDeployStatus('done'); setTimeout(() => router.push('/dashboard'), 1500) },
-          onError:   () => { setDeployStatus('done'); setTimeout(() => router.push('/dashboard'), 1500) },
-        })
-      },
+  const newVaultId = vaultChange.objectId
+  console.log('New vault ID:', newVaultId)
+  
+  // Deposit
+  const depositTx = new Transaction()
+  const [coin] = depositTx.splitCoins(depositTx.gas, [depositTx.pure.u64(toMIST(deposit))])
+  depositTx.moveCall({
+    target: `${PACKAGE_ID}::execution_vault::deposit`,
+    arguments: [depositTx.object(newVaultId), coin],
+  })
+
+  signAndExecute({ transaction: depositTx }, {
+    onSuccess: () => { setDeployStatus('done'); setTimeout(() => router.push('/dashboard'), 1500) },
+    onError:   () => { setDeployStatus('done'); setTimeout(() => router.push('/dashboard'), 1500) },
+  })
+},
       onError: (err) => {
         console.error('Setup failed:', err)
         setIsDeploying(false)
