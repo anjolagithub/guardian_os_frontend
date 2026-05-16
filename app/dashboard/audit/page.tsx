@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 const EXPLORER          = "https://suiscan.xyz";
-const WALRUS_AGGREGATOR = "https://aggregator.walrus-testnet.walrus.space/v1/blobs";
+const WALRUS_AGGREGATOR = "https://walruscan.com/testnet/blob";
 const PACKAGE_ID        = process.env.NEXT_PUBLIC_PACKAGE_ID ?? "";
 
 const PROTOCOL_NAMES: Record<number, string> = { 0: "Scallop", 1: "NAVI", 2: "DeepBook", 3: "Cetus" };
