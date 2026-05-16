@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GuardianOS — Frontend
 
-## Getting Started
+The dashboard and deploy interface for GuardianOS — trust enforcement infrastructure for autonomous AI agents on Sui.
 
-First, run the development server:
+**Live:** https://guardian-os-frontend.vercel.app
+
+## What this is
+
+A Next.js 14 app that lets users:
+- Deploy their own GuardianOS vault (5-step wizard)
+- Monitor their vault in real time (balance, Trust Score, action feed)
+- Inspect the AI reasoning trail stored on Walrus
+- Trigger emergency stop to reclaim funds instantly
+
+## Running locally
 
 ```bash
+npm install
+cp .env.example .env.local
+# Fill in env vars (see below)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_PACKAGE_ID=0xd89bcaeaab49e51b21baaaee43924081e2ee899da7ce1fdbdb6ff0b7a8ee8c1f
+NEXT_PUBLIC_VAULT_ID=0x4934ac1e7bca251b1df17e6fd72d2690795f0d95deb775a139934aaa5b6d2cee
+NEXT_PUBLIC_IDENTITY_ID=0x3a0fbf7d0f815c51e51d9e2a226102963d6e247e64c6f5680211c0723a46419c
+NEXT_PUBLIC_OWNER_CAP_ID=0x...
+```
 
-## Learn More
+These are the demo vault IDs. When a user connects their own wallet and deploys their own vault, the dashboard automatically switches to show their vault.
 
-To learn more about Next.js, take a look at the following resources:
+## Tech stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 14 App Router
+- Tailwind CSS
+- @mysten/dapp-kit (Sui wallet connection)
+- @mysten/sui (chain reads)
+- @tanstack/react-query
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Pages
 
-## Deploy on Vercel
+- `/` — Landing page
+- `/deploy` — 5-step vault creation wizard
+- `/dashboard` — Live vault monitor
+- `/dashboard/audit` — Walrus audit trail
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
