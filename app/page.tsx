@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Shield, Zap, Lock, Eye, ArrowRight, Terminal, Menu, X } from "lucide-react";
+import { useCurrentAccount, useWallets, useConnectWallet, useSuiClient } from "@mysten/dapp-kit";
 
 const TYPING_LINES = [
   "Initializing GuardianOS v1.0...",
@@ -21,12 +23,44 @@ const STATS = [
 ];
 
 export default function Home() {
-  const [lines, setLines]           = useState<string[]>([]);
+  const [lines, setLines]             = useState<string[]>([]);
   const [currentLine, setCurrentLine] = useState(0);
   const [currentChar, setCurrentChar] = useState(0);
-  const [showCursor, setShowCursor] = useState(true);
-  const [menuOpen, setMenuOpen]     = useState(false);
+  const [showCursor, setShowCursor]   = useState(true);
+  const [menuOpen, setMenuOpen]       = useState(false);
+  const [checking, setChecking]       = useState(false);
 
+  const router   = useRouter();
+  const account  = useCurrentAccount();
+  const client   = useSuiClient();
+  const wallets  = useWallets();
+  const { mutate: connect } = useConnectWallet();
+
+  const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID ?? "";
+
+  // Auto-redirect after wallet connects
+  useEffect(() => {
+    if (!account || !PACKAGE_ID) return;
+    setChecking(true);
+
+    const checkVault = async () => {
+      try {
+        const owned = await client.getOwnedObjects({
+          owner: account.address,
+          filter: { StructType: `${PACKAGE_ID}::execution_vault::ExecutionVault` },
+          options: { showContent: true },
+        });
+        // Has vault → go to dashboard. No vault → go to deploy wizard
+        router.push(owned.data.length > 0 ? "/dashboard" : "/deploy");
+      } catch {
+        router.push("/deploy");
+      }
+    };
+
+    checkVault();
+  }, [account, PACKAGE_ID]);
+
+  // Terminal typing animation
   useEffect(() => {
     if (currentLine >= TYPING_LINES.length) return;
     const line = TYPING_LINES[currentLine];
@@ -51,10 +85,26 @@ export default function Home() {
   const typingText = currentLine < TYPING_LINES.length
     ? TYPING_LINES[currentLine].slice(0, currentChar) : "";
 
+  const handleConnect = () => {
+    if (wallets[0]) connect({ wallet: wallets[0] });
+  };
+
   return (
     <main className="min-h-screen bg-void relative overflow-hidden">
       <div className="fixed inset-0 bg-grid-pattern bg-grid opacity-40 pointer-events-none" />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
+
+      {/* Checking vault overlay */}
+      {checking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/90 backdrop-blur-sm">
+          <div className="text-center space-y-4">
+            <div className="w-10 h-10 rounded border border-cyan/40 flex items-center justify-center mx-auto animate-pulse">
+              <Shield size={20} className="text-cyan" />
+            </div>
+            <p className="font-mono text-xs text-dim uppercase tracking-widest">Checking your vaults...</p>
+          </div>
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 border-b border-border">
@@ -67,14 +117,22 @@ export default function Home() {
           </span>
           <span className="tag bg-cyan/10 text-cyan border border-cyan/20 ml-1 hidden sm:inline">TESTNET</span>
         </div>
+
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
           <Link href="/dashboard" className="font-mono text-xs text-ghost hover:text-cyan transition-colors tracking-wider uppercase">Dashboard</Link>
           <Link href="/dashboard/audit" className="font-mono text-xs text-ghost hover:text-cyan transition-colors tracking-wider uppercase">Audit Trail</Link>
-          <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 bg-cyan/10 border border-cyan/30 text-cyan font-mono text-xs tracking-wider uppercase hover:bg-cyan/20 transition-all rounded">
-            <Zap size={12} /> Launch App
-          </Link>
+          {account ? (
+            <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 bg-cyan/10 border border-cyan/30 text-cyan font-mono text-xs tracking-wider uppercase hover:bg-cyan/20 transition-all rounded">
+              <Zap size={12} /> My Dashboard
+            </Link>
+          ) : (
+            <button onClick={handleConnect} className="flex items-center gap-2 px-4 py-2 bg-cyan text-void font-mono text-xs tracking-wider uppercase hover:bg-cyan/90 transition-all rounded">
+              <Shield size={12} /> Connect Wallet
+            </button>
+          )}
         </div>
+
         {/* Mobile hamburger */}
         <button className="md:hidden text-ghost" onClick={() => setMenuOpen(o => !o)}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -86,15 +144,17 @@ export default function Home() {
         <div className="relative z-10 md:hidden border-b border-border bg-surface px-4 py-4 flex flex-col gap-4">
           <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="font-mono text-xs text-ghost uppercase tracking-widest">Dashboard</Link>
           <Link href="/dashboard/audit" onClick={() => setMenuOpen(false)} className="font-mono text-xs text-ghost uppercase tracking-widest">Audit Trail</Link>
-          <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="font-mono text-xs text-cyan uppercase tracking-widest">Launch App →</Link>
+          {account ? (
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="font-mono text-xs text-cyan uppercase tracking-widest">My Dashboard →</Link>
+          ) : (
+            <button onClick={() => { setMenuOpen(false); handleConnect(); }} className="font-mono text-xs text-cyan uppercase tracking-widest text-left">Connect Wallet →</button>
+          )}
         </div>
       )}
 
       {/* Hero */}
       <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 pt-12 sm:pt-20 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-
-          {/* Left */}
           <div>
             <div className="flex items-center gap-2 mb-5">
               <div className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
@@ -111,17 +171,28 @@ export default function Home() {
               GuardianOS is the <span className="text-cyan">trust enforcement layer</span> that sits between the agent and the blockchain.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Link href="/deploy" className="group flex items-center gap-2 px-5 py-3 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
-                Open Dashboard <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
+              {account ? (
+                <Link href="/dashboard" className="group flex items-center gap-2 px-5 py-3 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
+                  Go to Dashboard <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <button onClick={handleConnect} className="group flex items-center gap-2 px-5 py-3 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
+                  Connect Wallet <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
               <a href="https://suiscan.xyz/testnet" target="_blank" rel="noreferrer"
                 className="flex items-center gap-2 px-5 py-3 border border-border text-ghost font-mono text-xs tracking-wider uppercase hover:border-cyan/30 hover:text-cyan transition-all rounded">
                 <Eye size={12} /> Explorer
               </a>
             </div>
+            {!account && (
+              <p className="font-mono text-[10px] text-dim mt-3">
+                Connect your Sui wallet → we check if you have a vault → take you to the right place automatically
+              </p>
+            )}
           </div>
 
-          {/* Right — terminal */}
+          {/* Terminal */}
           <div className="relative mt-6 lg:mt-0">
             <div className="card border-glow-cyan p-0 overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-panel">
@@ -154,15 +225,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats bar */}
+      {/* How it works — replaces stats bar */}
       <section className="relative z-10 border-y border-border bg-surface/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-5 grid grid-cols-2 sm:grid-cols-4 gap-0">
-          {STATS.map((s, i) => (
-            <div key={i} className={`px-4 sm:px-6 py-3 ${i > 0 ? "border-l border-border" : ""}`}>
-              <div className="font-mono text-xl sm:text-2xl font-700 text-cyan glow-cyan">{s.value}{s.suffix}</div>
-              <div className="font-mono text-[10px] text-dim uppercase tracking-widest mt-1">{s.label}</div>
-            </div>
-          ))}
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-border">
+            {[
+              { step: "01", title: "Connect & Create Vault", desc: "Connect your Sui wallet. Set your agent's rules — which protocols it can use, how much it can spend per action, daily limits." },
+              { step: "02", title: "Agent Runs Autonomously", desc: "The AI agent executes DeFi strategies on your behalf. Every action is checked against your policy before it executes — on-chain." },
+              { step: "03", title: "You Stay in Control", desc: "Watch every decision in real time. Audit trail stored on Walrus permanently. One-click emergency stop returns all funds instantly." },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="sm:px-8 first:pl-0 last:pr-0">
+                <div className="font-mono text-2xl font-700 text-cyan/20 mb-2">{step}</div>
+                <div className="font-display font-600 text-primary mb-2 text-sm">{title}</div>
+                <div className="font-sans text-xs text-ghost leading-relaxed">{desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -175,10 +253,10 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: "01", title: "Agent Identity",  desc: "Soulbound NFT on Sui. Non-transferable passport that tracks every action.", color: "cyan",   tag: "guardian_identity.move" },
-            { icon: "02", title: "Execution Vault", desc: "Agent is a limited operator. Funds never leave without policy approval.",  color: "green",  tag: "execution_vault.move"  },
-            { icon: "03", title: "Policy Engine",   desc: "On-chain rules: protocols, max spend, daily cap. Atomic enforcement.",      color: "amber",  tag: "policy_engine.move"    },
-            { icon: "04", title: "Walrus Black Box",desc: "Every AI decision hashed and stored. Tamper-proof audit trail forever.",    color: "violet", tag: "walrus storage"        },
+            { icon: "01", title: "Agent Identity",   desc: "Soulbound NFT on Sui. Non-transferable passport that tracks every action.", color: "cyan",   tag: "guardian_identity.move" },
+            { icon: "02", title: "Execution Vault",  desc: "Agent is a limited operator. Funds never leave without policy approval.",  color: "green",  tag: "execution_vault.move"  },
+            { icon: "03", title: "Policy Engine",    desc: "On-chain rules: protocols, max spend, daily cap. Atomic enforcement.",      color: "amber",  tag: "policy_engine.move"    },
+            { icon: "04", title: "Walrus Black Box", desc: "Every AI decision hashed and stored. Tamper-proof audit trail forever.",    color: "violet", tag: "walrus storage"        },
           ].map((item) => (
             <div key={item.icon} className="card p-5 hover:border-cyan/20 transition-colors">
               <div className={`font-mono text-2xl font-700 text-${item.color}/20 mb-3`}>{item.icon}</div>
@@ -202,9 +280,15 @@ export default function Home() {
             <p className="font-sans text-ghost mb-7 max-w-xl mx-auto text-sm sm:text-base">
               Deploy your first GuardianOS vault in one transaction. No trust required.
             </p>
-            <Link href="/deploy" className="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
-              <Shield size={16} /> Launch GuardianOS
-            </Link>
+            {account ? (
+              <Link href="/dashboard" className="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
+                <Shield size={16} /> Go to Dashboard
+              </Link>
+            ) : (
+              <button onClick={handleConnect} className="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-cyan text-void font-mono text-sm font-600 tracking-wider uppercase rounded hover:bg-cyan/90 transition-all">
+                <Shield size={16} /> Connect Wallet to Start
+              </button>
+            )}
           </div>
         </div>
       </section>

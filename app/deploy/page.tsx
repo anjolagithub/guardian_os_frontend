@@ -220,7 +220,7 @@ export default function DeployPage() {
           </div>
           <span className="font-mono text-sm text-primary tracking-widest uppercase hidden sm:inline">Guardian<span className="text-cyan">OS</span></span>
         </Link>
-        <span className="font-mono text-xs text-dim uppercase tracking-widest">Deploy Agent</span>
+        <span className="font-mono text-xs text-dim uppercase tracking-widest">Create Your Vault</span>
         <div className="flex items-center gap-2 text-[10px] font-mono text-green border border-green/30 px-2 py-1 rounded">
           <div className="w-1.5 h-1.5 rounded-full bg-green" />
           {account.address.slice(0, 6)}...{account.address.slice(-4)}
@@ -457,7 +457,7 @@ export default function DeployPage() {
               </button>
               <button onClick={handleDeploy} disabled={isDeploying || isPending || !account}
                 className="flex-1 flex items-center justify-center gap-2 py-3 bg-cyan text-void font-mono text-sm font-700 uppercase tracking-wider rounded hover:bg-cyan/90 transition-all disabled:opacity-50">
-                <Shield size={16} /> Launch Agent 🚀
+                <Shield size={16} /> Create Vault 🚀
               </button>
             </div>
           </div>
