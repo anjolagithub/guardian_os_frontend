@@ -480,7 +480,7 @@ const blobId = newlyCreated?.blobObject?.blobId;
               className="px-6 py-2.5 bg-cyan text-void font-mono text-xs font-600 uppercase tracking-wider rounded hover:bg-cyan/90 transition-all">
               Deploy Vault →
             </Link>
-            <a href="https://github.com/your-repo/guardian_os"
+            <a href="https://github.com/Guardian-OS/guardian_os"
               target="_blank" rel="noreferrer"
               className="px-6 py-2.5 border border-border text-ghost font-mono text-xs uppercase tracking-widest rounded hover:border-cyan/30 hover:text-cyan transition-all">
               View on GitHub

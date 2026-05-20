@@ -102,11 +102,13 @@ export default function AuditTrail() {
           // So we fetch the tx details to see if there's any memo/note
           // For hackathon: we match known tx→blob pairs
           const KNOWN_BLOBS: Record<string, string> = {
-            "9shqjTHPyQUkKXTUjfssvd83ZTdubBmn8rDmbzQVRmxN": "M2iDrFK-BAmoZBQDb2pPWGrBoqs-xzUTO6YOHXpZfvo",
-            "Gieevs82gVxqrnbbFLbMzRScAzf3WVuCgLH4hohck55M": "gStCvTPz86O-qP5uKdbdkIRhQzoMUSYHxZ1EWmAIJUA",
-            // Add new ones here as you run the agent
-          };
-
+          "9shqjTHPyQUkKXTUjfssvd83ZTdubBmn8rDmbzQVRmxN": "M2iDrFK-BAmoZBQDb2pPWGrBoqs-xzUTO6YOHXpZfvo",
+          "Gieevs82gVxqrnbbFLbMzRScAzf3WVuCgLH4hohck55M": "gStCvTPz86O-qP5uKdbdkIRhQzoMUSYHxZ1EWmAIJUA",
+          "25fXpyYm8kv59iPYGaNg1ha4qyK5JmU9yHEX5fZgQKbx": "fodp8Wk8jzIH7hgbxu0LX4a2TNWiXPSGJKpacyPMdjU",
+          "EFb2So9j2jtUj9QL6MEewjGYVBnbAKN5P2QPDybvBzAu": "OpEce6NXnyLP8qVM6puJRqMisalb9PKkxEsjcI21blM",
+          "2Ly1aRqFGXP3Z3pR37GH2CzzB3cLKsd7kVjtYQaxV5aj": "e6GzzXvmLHJC8hHOERL4ScoRBKgNeaGcsWyi2ZsDZ58",
+          "5JnhgY6fqsJ8vawoGLWnnoCsGepDsfRmdPmcWdTfUQPL": "L5H6aQOsVYA_PjCOLQ9O4mFxh62DJw9B1zDiid4RRZ4",
+        }
           blobId = KNOWN_BLOBS[txDigest] ?? null;
 
           // If we have a blob ID, fetch the full reasoning from Walrus
